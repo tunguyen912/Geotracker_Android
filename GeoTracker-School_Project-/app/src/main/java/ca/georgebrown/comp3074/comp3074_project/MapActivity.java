@@ -143,5 +143,6 @@ public class MapActivity extends AppCompatActivity {
         contentValues.put("DURATION", newDuration);
         contentValues.put("DISTANCE", newDistance);
         db.insert("ROUTE", null, contentValues);
+        db.close();
     }
 }

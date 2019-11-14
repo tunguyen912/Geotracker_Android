@@ -26,6 +26,9 @@ public class RouteListFragment extends ListFragment {
     private SQLiteDatabase db;
     static interface RouteListListener{
         void itemClicked(long id);
+
+        /*new line*/
+        //void itemLongClicked(long id);
     }
     private RouteListListener listener;
 
@@ -72,4 +75,5 @@ public class RouteListFragment extends ListFragment {
             listener.itemClicked(id);
         }
     }
+
 }

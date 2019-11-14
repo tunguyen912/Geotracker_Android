@@ -1,6 +1,7 @@
 package ca.georgebrown.comp3074.comp3074_project;
 
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
@@ -12,14 +13,16 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
 public class RouteDetailFragment extends Fragment {
 
-
     private long routeId;
+    private Button btnDelete, btnShare;
+    private SQLiteDatabase db;
     public RouteDetailFragment() {
         // Required empty public constructor
     }
@@ -69,7 +72,35 @@ public class RouteDetailFragment extends Fragment {
             }catch (SQLException e){
                 Toast.makeText(getContext(), "Database Unavailable", Toast.LENGTH_SHORT).show();
             }
+            btnDelete = view.findViewById(R.id.btnDelete);
+            btnShare = view.findViewById(R.id.btnShare);
+
+            btnDelete.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    deleteRoute(routeId);
+                    Toast.makeText(getContext(), "Successfully Deleted !!!", Toast.LENGTH_SHORT).show();
+                }
+            });
+            btnShare.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+                    sharingIntent.setType("text/plain");
+                    String shareBody = "Your body here";
+                    String shareSub = "Your subject here";
+                    sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, shareSub);
+                    sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
+                    startActivity(Intent.createChooser(sharingIntent, "Share using"));
+                }
+            });
         }
+    }
+    private void deleteRoute(long routeDeleteId){
+        RouteDbHelper routeDbHelper = new RouteDbHelper(this.getContext());
+        db = routeDbHelper.getWritableDatabase();
+        db.delete("ROUTE", "_id = ?", new String[] {Long.toString(routeDeleteId)});
+        db.close();
     }
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
