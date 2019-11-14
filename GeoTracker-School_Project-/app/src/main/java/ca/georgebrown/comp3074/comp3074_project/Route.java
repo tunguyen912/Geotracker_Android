@@ -1,4 +1,4 @@
-package ca.georgebrown.comp3074.comp3074_project;
+/*package ca.georgebrown.comp3074.comp3074_project;
 
 public class Route {
     private String start,stop,via,difficulty,date, distance, duration;
@@ -53,4 +53,4 @@ public class Route {
     public String getDuration() {
         return duration;
     }
-}
+}*/

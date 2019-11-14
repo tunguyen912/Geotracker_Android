@@ -1,4 +1,4 @@
-package ca.georgebrown.comp3074.comp3074_project;
+/*package ca.georgebrown.comp3074.comp3074_project;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -37,4 +37,4 @@ public class RouteAdapter extends ArrayAdapter<Route> {
         duration.setText(route.getDuration());
         return convertView;
     }
-}
+}*/
