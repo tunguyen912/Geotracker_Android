@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MapActivity"
+    android:orientation="vertical"
+    android:weightSum="8">
+    <com.google.android.gms.maps.MapView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:id="@+id/mapView"
+        android:background="@drawable/border_line"
+        android:layout_weight="7"/>
+
+    <ImageButton
+        android:id="@+id/btnTrack"
+        android:layout_width="90dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center"
+        android:layout_weight="1"
+        android:background="@drawable/circle_button"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        app:srcCompat="@drawable/start" />
+</LinearLayout>

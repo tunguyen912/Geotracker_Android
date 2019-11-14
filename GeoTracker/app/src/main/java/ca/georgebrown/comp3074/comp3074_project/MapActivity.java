@@ -1,0 +1,86 @@
+package ca.georgebrown.comp3074.comp3074_project;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.Toast;
+
+public class MapActivity extends AppCompatActivity {
+
+    private boolean clicked = false;
+    private boolean finished = false;
+    private ImageView startTrack;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_map);
+        startTrack = findViewById(R.id.btnTrack);
+
+        startTrack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                clicked = !clicked;
+                finished = false;
+                if(clicked && finished == false)
+                {
+                    Toast.makeText(getApplicationContext(),"START" , Toast.LENGTH_SHORT).show();
+                    startTrack.setImageResource(R.drawable.pause);
+                    finished=false;
+                }
+                else if(clicked == false && finished == false)
+                {
+                    Toast.makeText(getApplicationContext(),"PAUSE" , Toast.LENGTH_SHORT).show();
+                    startTrack.setImageResource(R.drawable.start);
+                    finished=false;
+                }
+
+            }
+        });
+        startTrack.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                Toast.makeText(getApplicationContext(),"STOP" , Toast.LENGTH_SHORT).show();
+                startTrack.setImageResource(R.drawable.stop);
+                finished = true;
+                return true;
+            }
+        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.hamburger_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        Intent intent;
+        switch (item.getItemId()) {
+            case R.id.history:
+                intent = new Intent(this, RouteListActivity.class);
+                startActivity(intent);
+                return true;
+            case R.id.about:
+                intent = new Intent(this, AboutUsActivity.class);
+                startActivity(intent);
+                return true;
+            case R.id.home:
+                intent = new Intent(this, MapActivity.class);
+                startActivity(intent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+}

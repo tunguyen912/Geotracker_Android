@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">COMP3074_Project</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="departure">Departure: %1$s</string>
+    <string name="via">Via: %1$s</string>
+    <string name="destination">Destination: %1$s</string>
+    <string name="distance">Distance: %1$s</string>
+    <string name="duration">Duration: %1$s</string>
+    <string name="difficulty">Difficulty: %1$s</string>
+    <string name="date">Date: %1$s</string>
+</resources>
