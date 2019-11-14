@@ -37,7 +37,6 @@ public class RouteListFragment extends ListFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        //RouteAdapter adapter = new RouteAdapter(inflater.getContext(), R.layout.route_list_layout, Route.routes);
         try{
         RouteDbHelper routeDbHelper = new RouteDbHelper(getContext());
         db = routeDbHelper.getReadableDatabase();

@@ -4,7 +4,9 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Dialog;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.Menu;
@@ -24,6 +26,9 @@ public class MapActivity extends AppCompatActivity {
     private boolean clicked = false;
     private boolean finished = false;
     private ImageView startTrack;
+    private String newDeparture, newDestination, newDistance, newDuration, newVia, newDate, newDifficulty;
+    private SQLiteDatabase db;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,26 +43,25 @@ public class MapActivity extends AppCompatActivity {
                 if(clicked && finished == false)
                 {
                     Toast.makeText(getApplicationContext(),"START" , Toast.LENGTH_SHORT).show();
-                    startTrack.setImageResource(R.drawable.pause);
+                    startTrack.setImageResource(R.drawable.stop);
                     finished=false;
                 }
                 else if(clicked == false && finished == false)
                 {
-                    Toast.makeText(getApplicationContext(),"PAUSE" , Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),"STOP" , Toast.LENGTH_SHORT).show();
                     startTrack.setImageResource(R.drawable.start);
                     finished=false;
-                    showDialog("TEST", "TEST", "XX km", "XX mins");
-                }
 
-            }
-        });
-        startTrack.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View view) {
-                Toast.makeText(getApplicationContext(),"STOP" , Toast.LENGTH_SHORT).show();
-                startTrack.setImageResource(R.drawable.stop);
-                finished = true;
-                return true;
+                    newDeparture = "Test Departure";
+                    newDestination = "Test Destination";
+                    newDistance = "Test Distance";
+                    newDuration = "Test Duration";
+                    newVia = "Test Via";
+                    newDate = "Test Date";
+                    newDifficulty = "Test Difficulty";
+
+                    showDialog(newDeparture, newDestination, newDistance, newDuration);
+                }
             }
         });
     }
@@ -85,6 +89,7 @@ public class MapActivity extends AppCompatActivity {
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                insertRoute(db, newDeparture, newDestination, newVia, newDate, newDuration, newDistance, newDifficulty);
                 Toast.makeText(getApplicationContext(), "Saved", Toast.LENGTH_SHORT).show();
                 dialog.cancel();
             }
@@ -124,5 +129,19 @@ public class MapActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+    private void insertRoute(SQLiteDatabase db, String newDeparture, String newDestination, String newVia,
+                             String newDate, String newDuration, String newDistance, String newDifficulty){
+        RouteDbHelper routeDbHelper = new RouteDbHelper(this.getApplication());
+        db = routeDbHelper.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("DEPARTURE", newDeparture);
+        contentValues.put("DESTINATION", newDestination);
+        contentValues.put("VIA", newVia);
+        contentValues.put("DATE", newDate);
+        contentValues.put("DIFFICULTY", newDifficulty);
+        contentValues.put("DURATION", newDuration);
+        contentValues.put("DISTANCE", newDistance);
+        db.insert("ROUTE", null, contentValues);
     }
 }
