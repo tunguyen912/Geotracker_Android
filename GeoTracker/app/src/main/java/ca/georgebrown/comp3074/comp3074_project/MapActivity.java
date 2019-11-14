@@ -3,6 +3,7 @@ package ca.georgebrown.comp3074.comp3074_project;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -11,7 +12,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MapActivity extends AppCompatActivity {
@@ -41,6 +46,7 @@ public class MapActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(),"PAUSE" , Toast.LENGTH_SHORT).show();
                     startTrack.setImageResource(R.drawable.start);
                     finished=false;
+                    showDialog("TEST", "TEST", "XX km", "XX mins");
                 }
 
             }
@@ -55,7 +61,43 @@ public class MapActivity extends AppCompatActivity {
             }
         });
     }
+    private void showDialog(String departure, String destination, String distance, String duration){
+        final Dialog dialog = new Dialog(this);
+        //dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_layout);
+        dialog.setCanceledOnTouchOutside(false);
 
+        Button btnSave, btnCancel;
+        EditText txtDeparture, txtDestination, txtDuration, txtDistance;
+
+        btnSave = dialog.findViewById(R.id.btnSaveDialog);
+        btnCancel = dialog.findViewById(R.id.btnCancelDialog);
+        txtDeparture = dialog.findViewById(R.id.txtDepartureDialog);
+        txtDestination = dialog.findViewById(R.id.txtDestinationDialog);
+        txtDuration = dialog.findViewById(R.id.txtDurationDialog);
+        txtDistance = dialog.findViewById(R.id.txtDistanceDialog);
+
+        txtDeparture.setText(departure);
+        txtDestination.setText(destination);
+        txtDistance.setText(distance);
+        txtDuration.setText(duration);
+
+        btnSave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getApplicationContext(), "Saved", Toast.LENGTH_SHORT).show();
+                dialog.cancel();
+            }
+        });
+        btnCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.cancel();
+            }
+        });
+
+        dialog.show();
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
