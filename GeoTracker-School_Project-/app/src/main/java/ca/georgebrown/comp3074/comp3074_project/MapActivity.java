@@ -67,12 +67,12 @@ public class MapActivity extends AppCompatActivity {
     }
     private void showDialog(String departure, String destination, String distance, String duration){
         final Dialog dialog = new Dialog(this);
-        //dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.dialog_layout);
         dialog.setCanceledOnTouchOutside(false);
 
         Button btnSave, btnCancel;
-        EditText txtDeparture, txtDestination, txtDuration, txtDistance;
+        final EditText txtDeparture, txtDestination;
+        EditText txtDuration, txtDistance;
 
         btnSave = dialog.findViewById(R.id.btnSaveDialog);
         btnCancel = dialog.findViewById(R.id.btnCancelDialog);
@@ -86,9 +86,13 @@ public class MapActivity extends AppCompatActivity {
         txtDistance.setText(distance);
         txtDuration.setText(duration);
 
+
+
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                newDeparture = txtDeparture.getText().toString();
+                newDestination = txtDestination.getText().toString();
                 insertRoute(db, newDeparture, newDestination, newVia, newDate, newDuration, newDistance, newDifficulty);
                 Toast.makeText(getApplicationContext(), "Saved", Toast.LENGTH_SHORT).show();
                 dialog.cancel();
