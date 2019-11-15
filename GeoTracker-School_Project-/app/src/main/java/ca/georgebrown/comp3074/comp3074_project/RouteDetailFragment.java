@@ -1,6 +1,8 @@
 package ca.georgebrown.comp3074.comp3074_project;
 
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -23,6 +25,7 @@ public class RouteDetailFragment extends Fragment {
     private long routeId;
     private Button btnDelete, btnShare;
     private SQLiteDatabase db;
+    private AlertDialog.Builder deleteAlertDialog;
     public RouteDetailFragment() {
         // Required empty public constructor
     }
@@ -78,8 +81,22 @@ public class RouteDetailFragment extends Fragment {
             btnDelete.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    deleteRoute(routeId);
-                    Toast.makeText(getContext(), "Successfully Deleted !!!", Toast.LENGTH_SHORT).show();
+                    deleteAlertDialog = confirmDeleteRoute();
+                    deleteAlertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            deleteRoute(routeId);
+                            Toast.makeText(getContext(), "Successfully Deleted !!!", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(getActivity(),RouteListActivity.class);
+                            startActivity(intent);
+                        }
+                    });
+                    deleteAlertDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    });
+                    deleteAlertDialog.show();
                 }
             });
             btnShare.setOnClickListener(new View.OnClickListener() {
@@ -87,7 +104,7 @@ public class RouteDetailFragment extends Fragment {
                 public void onClick(View v) {
                     Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
                     sharingIntent.setType("text/plain");
-                    String shareBody = "Your body here";
+                    String shareBody = "This is the share body";
                     String shareSub = "Your subject here";
                     sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, shareSub);
                     sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
@@ -95,6 +112,13 @@ public class RouteDetailFragment extends Fragment {
                 }
             });
         }
+    }
+    private AlertDialog.Builder confirmDeleteRoute(){
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(this.getContext());
+        alertDialog.setTitle("Delete Confirmation");
+        alertDialog.setIcon(R.mipmap.ic_launcher);
+        alertDialog.setMessage("Delete this record?");
+        return alertDialog;
     }
     private void deleteRoute(long routeDeleteId){
         RouteDbHelper routeDbHelper = new RouteDbHelper(this.getContext());
