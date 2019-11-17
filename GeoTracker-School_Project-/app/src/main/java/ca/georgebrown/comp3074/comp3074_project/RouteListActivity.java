@@ -63,4 +63,11 @@ public class RouteListActivity extends AppCompatActivity implements RouteListFra
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(this, MapActivity.class);
+        startActivity(intent);
+        super.onBackPressed();
+    }
 }

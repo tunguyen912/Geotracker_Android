@@ -2,6 +2,7 @@ package ca.georgebrown.comp3074.comp3074_project;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 public class RouteDetailsActivity extends AppCompatActivity {
@@ -16,5 +17,12 @@ public class RouteDetailsActivity extends AppCompatActivity {
                 getSupportFragmentManager().findFragmentById(R.id.detail_frag);
         int routeId = (int)getIntent().getExtras().get(EXTRA_ROUTE_ID);
         routeDetailFragment.setRouteId(routeId);
+    }
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(this, RouteListActivity.class);
+        startActivity(intent);
+        super.onBackPressed();
     }
 }

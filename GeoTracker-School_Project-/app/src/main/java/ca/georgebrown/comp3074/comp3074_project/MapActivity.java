@@ -149,4 +149,11 @@ public class MapActivity extends AppCompatActivity {
         db.insert("ROUTE", null, contentValues);
         db.close();
     }
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+        super.onBackPressed();
+    }
 }
