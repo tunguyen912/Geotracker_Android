@@ -7,15 +7,21 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.core.view.MenuItemCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.ListFragment;
 
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CursorAdapter;
 import android.widget.ListView;
+import android.widget.SearchView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -27,8 +33,7 @@ public class RouteListFragment extends ListFragment {
     static interface RouteListListener{
         void itemClicked(long id);
 
-        /*new line*/
-        //void itemLongClicked(long id);
+
     }
     private RouteListListener listener;
 
@@ -53,6 +58,7 @@ public class RouteListFragment extends ListFragment {
         }catch (SQLException e){
             Toast.makeText(getContext(), "Database Unavailable", Toast.LENGTH_SHORT).show();
         }
+        setHasOptionsMenu(true);
         return super.onCreateView(inflater, container, savedInstanceState);
     }
 
@@ -76,4 +82,39 @@ public class RouteListFragment extends ListFragment {
         }
     }
 
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.search_menu, menu);
+        final MenuItem searchItem = menu.findItem(R.id.search);
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                searchRoute(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+    private void searchRoute(String searchInput){
+        LayoutInflater inflater = getLayoutInflater();
+        try{
+            RouteDbHelper routeDbHelper = new RouteDbHelper(getContext());
+            db = routeDbHelper.getReadableDatabase();
+            cursor = db.query("ROUTE",
+                    new String[] {"_id", "DEPARTURE", "DESTINATION", "DURATION", "DISTANCE", "DATE"},
+                    "DEPARTURE = ?", new String[] {searchInput},null, null, null);
+            CursorAdapter adapter = new SimpleCursorAdapter(inflater.getContext(), R.layout.route_list_layout,
+                    cursor, new String[] {"DEPARTURE", "DESTINATION", "DURATION", "DISTANCE", "DATE"},
+                    new int[] {R.id.departure, R.id.destination, R.id.distance, R.id.duration, R.id.date}, 0);
+            setListAdapter(adapter);
+        }catch (SQLException e){
+            Toast.makeText(getContext(), "Database Unavailable", Toast.LENGTH_SHORT).show();
+        }
+    }
 }
