@@ -7,17 +7,5 @@
         android:title="Search"
         app:actionViewClass = "android.widget.SearchView"
         app:showAsAction="always|collapseActionView"/>
-    <item
-        android:id="@+id/home"
-        android:title="Home"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/history"
-        android:title="History"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/about"
-        android:title="About"
-        app:showAsAction="never" />
 
 </menu>

@@ -90,13 +90,14 @@ public class RouteListFragment extends ListFragment {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                searchRoute(query);
-                return true;
+                //searchRoute(query);
+                return false;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                return false;
+                searchRoute(newText);
+                return true;
             }
         });
         super.onCreateOptionsMenu(menu, inflater);
@@ -108,7 +109,14 @@ public class RouteListFragment extends ListFragment {
             db = routeDbHelper.getReadableDatabase();
             cursor = db.query("ROUTE",
                     new String[] {"_id", "DEPARTURE", "DESTINATION", "DURATION", "DISTANCE", "DATE"},
-                    "DEPARTURE = ?", new String[] {searchInput},null, null, null);
+                    "DEPARTURE LIKE ? OR DESTINATION LIKE ?",
+                    new String[] {"%" + searchInput + "%", "%" + searchInput + "%" },
+                    null, null, null);
+
+            if(cursor.getCount() == 0){
+                Toast.makeText(getContext(), "Route not found", Toast.LENGTH_SHORT).show();
+            }
+
             CursorAdapter adapter = new SimpleCursorAdapter(inflater.getContext(), R.layout.route_list_layout,
                     cursor, new String[] {"DEPARTURE", "DESTINATION", "DURATION", "DISTANCE", "DATE"},
                     new int[] {R.id.departure, R.id.destination, R.id.distance, R.id.duration, R.id.date}, 0);
