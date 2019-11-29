@@ -2,6 +2,7 @@ package ca.georgebrown.comp3074.comp3074_project;
 
 
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -16,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,7 +26,9 @@ public class RouteDetailFragment extends Fragment {
 
     private long routeId;
     private Button btnDelete, btnShare;
+    private RatingBar ratingBar;
     private SQLiteDatabase db;
+    private Cursor cursor;
     private AlertDialog.Builder deleteAlertDialog;
     public RouteDetailFragment() {
         // Required empty public constructor
@@ -49,9 +53,9 @@ public class RouteDetailFragment extends Fragment {
         if(view != null){
             try{
                 RouteDbHelper routeDbHelper = new RouteDbHelper(getContext());
-                SQLiteDatabase db = routeDbHelper.getReadableDatabase();
-                Cursor cursor = db.query("ROUTE",
-                        new String[] {"DEPARTURE", "DESTINATION", "VIA", "DATE", "DIFFICULTY", "DURATION", "DISTANCE"},
+                db = routeDbHelper.getReadableDatabase();
+                cursor = db.query("ROUTE",
+                        new String[] {"DEPARTURE", "DESTINATION", "VIA", "DATE", "DIFFICULTY", "DURATION", "DISTANCE", "RATE"},
                         "_id = ?", new String[] {Long.toString(routeId)},
                         null, null, null);
                 if(cursor.moveToFirst()){
@@ -69,9 +73,18 @@ public class RouteDetailFragment extends Fragment {
                     difficulty.setText(getString(R.string.difficulty , cursor.getString(4)));
                     TextView date = view.findViewById(R.id.textDate);
                     date.setText(getString(R.string.date, cursor.getString(3)));
+                    ratingBar = view.findViewById(R.id.ratingBar);
+                    ratingBar.setRating(cursor.getFloat(7));
+                    ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+                        @Override
+                        public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
+                            ContentValues cv = new ContentValues();
+                            cv.put("RATE", rating);
+                            db.update("ROUTE", cv,"_id = ?", new String[] {Long.toString(routeId)});
+                        }
+                    });
                 }
-                cursor.close();
-                db.close();
+
             }catch (SQLException e){
                 Toast.makeText(getContext(), "Database Unavailable", Toast.LENGTH_SHORT).show();
             }
@@ -104,13 +117,14 @@ public class RouteDetailFragment extends Fragment {
                 public void onClick(View v) {
                     Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
                     sharingIntent.setType("text/plain");
-                    String shareBody = "This is the share body";
-                    String shareSub = "Your subject here";
+                    String shareBody = "Route from " + cursor.getString(0) + " to " + cursor.getString(1);
+                    String shareSub = "GEOTRACKER share";
                     sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, shareSub);
                     sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
                     startActivity(Intent.createChooser(sharingIntent, "Share using"));
                 }
             });
+
         }
     }
     private AlertDialog.Builder confirmDeleteRoute(){
@@ -129,5 +143,12 @@ public class RouteDetailFragment extends Fragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putLong("routeId", routeId);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        cursor.close();
+        db.close();
     }
 }
