@@ -30,11 +30,16 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 
+import java.sql.Array;
+import java.util.ArrayList;
+import java.util.List;
+
 public class MapActivity extends AppCompatActivity implements FetchAddressTask.OnTaskCompleted {
 
-    private static final int REQUEST_LOCATION_PERMISION = 1;
+    private static final int REQUEST_LOCATION_PERMISSION = 1;
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
+    private List<String> temp = new ArrayList<String>();
 
     private boolean trackingLocation;
     private ImageView startTrack;
@@ -73,7 +78,7 @@ public class MapActivity extends AppCompatActivity implements FetchAddressTask.O
                 != PackageManager.PERMISSION_GRANTED){
             ActivityCompat.requestPermissions(this,
                     new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
-                    REQUEST_LOCATION_PERMISION);
+                    REQUEST_LOCATION_PERMISSION);
         }else {
             fusedLocationClient.requestLocationUpdates(getLocationRequest(), locationCallback, null );
         }
@@ -88,14 +93,15 @@ public class MapActivity extends AppCompatActivity implements FetchAddressTask.O
             startTrack.setImageResource(R.drawable.start);
             fusedLocationClient.removeLocationUpdates(locationCallback);
 
-            newDeparture = "Test Departure";
-            newDestination = "Test Destination";
+            newDeparture = temp.get(0);
+            newDestination = temp.get(temp.size() - 1);
             newDistance = "Test Distance";
             newDuration = "Test Duration";
             newVia = "Test Via";
             newDate = "Test Date";
             newDifficulty = "Test Difficulty";
             showDialog(newDeparture, newDestination, newDistance, newDuration);
+            temp.clear();
         }
     }
     private LocationRequest getLocationRequest() {
@@ -107,11 +113,11 @@ public class MapActivity extends AppCompatActivity implements FetchAddressTask.O
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if(requestCode == REQUEST_LOCATION_PERMISION){
+        if(requestCode == REQUEST_LOCATION_PERMISSION){
             if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
                 startTrackingLocation();
             }else {
-                Toast.makeText(this, "Permision is not granted", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Permission is not granted", Toast.LENGTH_SHORT).show();
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -213,5 +219,6 @@ public class MapActivity extends AppCompatActivity implements FetchAddressTask.O
     @Override
     public void onTaskCompleted(String result) {
         Toast.makeText(this, result, Toast.LENGTH_SHORT).show();
+        temp.add(result);
     }
 }
