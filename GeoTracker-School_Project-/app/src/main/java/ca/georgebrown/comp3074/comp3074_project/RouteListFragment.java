@@ -86,7 +86,6 @@ public class RouteListFragment extends ListFragment {
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.search_menu, menu);
         final MenuItem searchItem = menu.findItem(R.id.search);
-        //SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
         SearchView searchView = (SearchView) searchItem.getActionView();
         searchView.setQueryHint("Enter Departure or Destination");
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
