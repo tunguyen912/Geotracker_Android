@@ -56,7 +56,7 @@ public class RouteListActivity extends AppCompatActivity implements RouteListFra
                 startActivity(intent);
                 return true;
             case R.id.home:
-                intent = new Intent(this, MapActivity.class);
+                intent = new Intent(this, MapsActivity.class);
                 startActivity(intent);
                 return true;
             default:
@@ -66,7 +66,7 @@ public class RouteListActivity extends AppCompatActivity implements RouteListFra
 
     @Override
     public void onBackPressed() {
-        Intent intent = new Intent(this, MapActivity.class);
+        Intent intent = new Intent(this, MapsActivity.class);
         startActivity(intent);
         super.onBackPressed();
     }

@@ -10,4 +10,5 @@
     <string name="duration">Duration: %1$s</string>
     <string name="difficulty">Difficulty: %1$s</string>
     <string name="date">Date: %1$s</string>
+    <string name="title_activity_maps">Map</string>
 </resources>

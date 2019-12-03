@@ -3,6 +3,7 @@ package ca.georgebrown.comp3074.comp3074_project;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.app.Dialog;
@@ -11,17 +12,13 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -29,13 +26,19 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MapActivity extends AppCompatActivity implements FetchAddressTask.OnTaskCompleted {
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, FetchAddressTask.OnTaskCompleted {
 
+    private GoogleMap mMap;
     private static final int REQUEST_LOCATION_PERMISSION = 1;
     private static final String TRACKING_LOCATION_KEY = "tracking_key";
     private FusedLocationProviderClient fusedLocationClient;
@@ -50,14 +53,15 @@ public class MapActivity extends AppCompatActivity implements FetchAddressTask.O
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_map);
+        setContentView(R.layout.activity_maps);
+        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
 
         if (savedInstanceState != null) {
             trackingLocation = savedInstanceState.getBoolean(TRACKING_LOCATION_KEY);
         }
 
         startTrack = findViewById(R.id.btnTrack);
-
+        startTrack.setImageResource(R.drawable.start);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         startTrack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -73,11 +77,35 @@ public class MapActivity extends AppCompatActivity implements FetchAddressTask.O
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 if (trackingLocation) {
-                    new FetchAddressTask(MapActivity.this, MapActivity.this)
+                    new FetchAddressTask(MapsActivity.this, MapsActivity.this)
                             .execute(locationResult.getLastLocation());
                 }
             }
         };
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+    }
+
+
+    /**
+     * Manipulates the map once available.
+     * This callback is triggered when the map is ready to be used.
+     * This is where we can add markers or lines, add listeners or move the camera. In this case,
+     * we just add a marker near Sydney, Australia.
+     * If Google Play services is not installed on the device, the user will be prompted to install
+     * it inside the SupportMapFragment. This method will only be triggered once the user has
+     * installed Google Play services and returned to the app.
+     */
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+        // Add a marker in Sydney and move the camera
+        float zoom = 15;
+        LatLng gbc = new LatLng(43.676209, -79.410703);
+        mMap.addMarker(new MarkerOptions().position(gbc).title("Marker in GBC"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(gbc, zoom));
     }
     private void startTrackingLocation(){
         if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -214,7 +242,7 @@ public class MapActivity extends AppCompatActivity implements FetchAddressTask.O
                 startActivity(intent);
                 return true;
             case R.id.home:
-                intent = new Intent(this, MapActivity.class);
+                intent = new Intent(this, MapsActivity.class);
                 startActivity(intent);
                 return true;
             default:
