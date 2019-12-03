@@ -37,6 +37,7 @@ import java.util.List;
 public class MapActivity extends AppCompatActivity implements FetchAddressTask.OnTaskCompleted {
 
     private static final int REQUEST_LOCATION_PERMISSION = 1;
+    private static final String TRACKING_LOCATION_KEY = "tracking_key";
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
     private List<String> temp = new ArrayList<String>();
@@ -50,6 +51,11 @@ public class MapActivity extends AppCompatActivity implements FetchAddressTask.O
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+
+        if (savedInstanceState != null) {
+            trackingLocation = savedInstanceState.getBoolean(TRACKING_LOCATION_KEY);
+        }
+
         startTrack = findViewById(R.id.btnTrack);
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -220,5 +226,26 @@ public class MapActivity extends AppCompatActivity implements FetchAddressTask.O
     public void onTaskCompleted(String result) {
         Toast.makeText(this, result, Toast.LENGTH_SHORT).show();
         temp.add(result);
+    }
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(TRACKING_LOCATION_KEY, trackingLocation);
+        super.onSaveInstanceState(outState);
+    }
+    @Override
+    protected void onPause() {
+        if (trackingLocation) {
+            stopTrackingLocation();
+            trackingLocation = true;
+        }
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        if (trackingLocation) {
+            startTrackingLocation();
+        }
+        super.onResume();
     }
 }
