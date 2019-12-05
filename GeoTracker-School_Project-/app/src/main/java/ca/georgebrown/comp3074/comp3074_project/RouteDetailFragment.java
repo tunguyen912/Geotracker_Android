@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -21,15 +22,35 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.MapsInitializer;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+
+import java.util.ArrayList;
+
 
 public class RouteDetailFragment extends Fragment {
 
+    private MapView mMapView;
+    private GoogleMap googleMap;
     private long routeId;
     private Button btnDelete, btnShare;
     private RatingBar ratingBar;
     private SQLiteDatabase db;
     private Cursor cursor;
     private AlertDialog.Builder deleteAlertDialog;
+    PolylineOptions polylineOptions = new PolylineOptions();
+
+
+
     public RouteDetailFragment() {
         // Required empty public constructor
     }
@@ -39,11 +60,22 @@ public class RouteDetailFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        View v = inflater.inflate(R.layout.fragment_route_detail, container, false);
         // Inflate the layout for this fragment
         if(savedInstanceState!=null){
             routeId = savedInstanceState.getLong("routeid");
         }
-        return inflater.inflate(R.layout.fragment_route_detail, container, false);
+        mMapView = (MapView) v.findViewById(R.id.mapView);
+        mMapView.onCreate(savedInstanceState);
+        mMapView.onResume();
+        try {
+            MapsInitializer.initialize(getActivity().getApplicationContext());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return v;
+
     }
 
     @Override
@@ -85,6 +117,30 @@ public class RouteDetailFragment extends Fragment {
                     });
                 }
 
+                ArrayList<LatLng> coordList = new ArrayList<LatLng>();
+                Cursor c = db.query("PATH", new String[] {"LATITUDE", "LONGITUDE"},
+                        "ROUTE_ID = ?", new String[]{Long.toString(routeId) + 1},
+                        null, null, "_id");
+                while (c.moveToNext()) {
+                    coordList.add(new LatLng(Double.parseDouble(c.getString(0)), Double.parseDouble(c.getString(1))));
+                }
+                polylineOptions.addAll(coordList);
+                polylineOptions.color(Color.RED);
+                polylineOptions.width(5);
+                mMapView.getMapAsync(new OnMapReadyCallback() {
+                    @Override
+                    public void onMapReady(GoogleMap gMap) {
+                        googleMap = gMap;
+                        LatLng sydney = new LatLng(-33.868820, 151.209290);
+                        googleMap.addMarker(new MarkerOptions().position(sydney).title("Marker Title").snippet("Marker Description"));
+
+                        // For zooming automatically to the location of the marker
+                        CameraPosition cameraPosition = new CameraPosition.Builder().target(sydney).zoom(12).build();
+                        googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                        googleMap.addPolyline(polylineOptions);
+                    }
+                });
+                c.close();
             }catch (SQLException e){
                 Toast.makeText(getContext(), "Database Unavailable", Toast.LENGTH_SHORT).show();
             }
@@ -150,5 +206,26 @@ public class RouteDetailFragment extends Fragment {
         super.onDestroy();
         cursor.close();
         db.close();
+        mMapView.onDestroy();
+
+    }
+    @Override
+    public void onResume() {
+        super.onResume();
+        mMapView.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mMapView.onPause();
+    }
+
+
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        mMapView.onLowMemory();
     }
 }

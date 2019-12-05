@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<fragment xmlns:android="http://schemas.android.com/apk/res/android"
+<fragment
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/detail_frag"
     class="ca.georgebrown.comp3074.comp3074_project.RouteDetailFragment"
     android:layout_width="match_parent"

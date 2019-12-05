@@ -78,12 +78,10 @@
             android:text="Delete"
             android:id="@+id/btnDelete"/>
     </LinearLayout>
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="275dp"
-        android:layout_height="262dp"
-        android:contentDescription="map"
-        app:srcCompat="@android:drawable/ic_menu_mapmode" />
+    <com.google.android.gms.maps.MapView
+        android:layout_width="match_parent"
+        android:layout_height="400dp"
+        android:id="@+id/mapView"/>
     <TextView
         android:textSize="18sp"
         android:id="@+id/txtRate"

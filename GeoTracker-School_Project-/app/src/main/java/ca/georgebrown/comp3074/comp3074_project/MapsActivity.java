@@ -10,7 +10,9 @@ import android.app.Dialog;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.location.Location;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -32,6 +34,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,12 +46,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final String TRACKING_LOCATION_KEY = "tracking_key";
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
-    private List<String> temp = new ArrayList<String>();
+    private List<String> tempAddress = new ArrayList<String>();
+    private List<double[]> tempLatLog = new ArrayList<double[]>();
 
     private boolean trackingLocation;
     private ImageView startTrack;
     private String newDeparture, newDestination, newDistance, newDuration, newVia, newDate, newDifficulty;
     private SQLiteDatabase db;
+    private Cursor cursor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,20 +132,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             startTrack.setImageResource(R.drawable.start);
             fusedLocationClient.removeLocationUpdates(locationCallback);
 
-            newDeparture = temp.get(0);
-            newDestination = temp.get(temp.size() - 1);
+            newDeparture = tempAddress.get(0);
+            newDestination = tempAddress.get(tempAddress.size() - 1);
             newDistance = "Test Distance";
             newDuration = "Test Duration";
             newVia = "Test Via";
-            newDate = "Test Date";
+            newDate = String.valueOf(android.text.format.DateFormat.format("dd-MM-yyyy", new java.util.Date()));
             newDifficulty = "Test Difficulty";
             showDialog(newDeparture, newDestination, newDistance, newDuration);
-            temp.clear();
+            tempAddress.clear();
+            tempLatLog.clear();
         }
     }
     private LocationRequest getLocationRequest() {
         LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(10000);
+        locationRequest.setInterval(30000);
         locationRequest.setFastestInterval(5000);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         return locationRequest;
@@ -178,8 +184,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         txtDistance.setText(distance);
         txtDuration.setText(duration);
 
-
-
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -213,6 +217,24 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         contentValues.put("DURATION", newDuration);
         contentValues.put("DISTANCE", newDistance);
         db.insert("ROUTE", null, contentValues);
+        db.close();
+    }
+    private Cursor getListId(SQLiteDatabase db){
+        RouteDbHelper routeDbHelper = new RouteDbHelper(this);
+        db = routeDbHelper.getReadableDatabase();
+        return db.query("ROUTE",
+                new String[] {"_id"},
+                null, null,
+                null, null, "_id");
+    }
+    private void insertPath(SQLiteDatabase db, int routeIdPlusOne, float lat, float lng){
+        RouteDbHelper routeDbHelper = new RouteDbHelper(this.getApplication());
+        db = routeDbHelper.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("ROUTE_ID", routeIdPlusOne);
+        contentValues.put("LATITUDE", lat);
+        contentValues.put("LONGITUDE", lng);
+        db.insert("PATH", null, contentValues);
         db.close();
     }
 
@@ -253,8 +275,33 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onTaskCompleted(String result) {
         Toast.makeText(this, result, Toast.LENGTH_SHORT).show();
-        temp.add(result);
+        tempAddress.add(result);
+        final Location[] currentLocation = new Location[1];
+        fusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                if(location != null){
+                    currentLocation[0] = location;
+                    Toast.makeText(MapsActivity.this, currentLocation[0].getLatitude()+" "+
+                            currentLocation[0].getLongitude(), Toast.LENGTH_SHORT).show();
+                    tempLatLog.add(new double[] {currentLocation[0].getLatitude(), currentLocation[0].getLongitude()});
+                    cursor = getListId(db);
+                    int lastRouteId = 0;
+                    if(cursor.moveToLast()){
+                        lastRouteId = cursor.getInt(0) + 1;
+                    }
+                    cursor.close();
+                    for (int n = 0; n < tempLatLog.size(); n++) {
+                        insertPath(db, lastRouteId,(float) tempLatLog.get(n)[0],(float) tempLatLog.get(n)[1]);
+                    }
+                }
+                else{
+                    Toast.makeText(getApplicationContext(), "Hello", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putBoolean(TRACKING_LOCATION_KEY, trackingLocation);
