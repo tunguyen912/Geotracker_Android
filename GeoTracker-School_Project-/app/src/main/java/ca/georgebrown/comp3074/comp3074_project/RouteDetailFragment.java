@@ -117,29 +117,39 @@ public class RouteDetailFragment extends Fragment {
                     });
                 }
 
-                ArrayList<LatLng> coordList = new ArrayList<LatLng>();
+                final ArrayList<LatLng> coordList = new ArrayList<LatLng>();
                 Cursor c = db.query("PATH", new String[] {"LATITUDE", "LONGITUDE"},
-                        "ROUTE_ID = ?", new String[]{Long.toString(routeId) + 1},
+                        "ROUTE_ID = ?", new String[]{Long.toString(routeId)},
                         null, null, "_id");
-                while (c.moveToNext()) {
-                    coordList.add(new LatLng(Double.parseDouble(c.getString(0)), Double.parseDouble(c.getString(1))));
-                }
-                polylineOptions.addAll(coordList);
-                polylineOptions.color(Color.RED);
-                polylineOptions.width(5);
-                mMapView.getMapAsync(new OnMapReadyCallback() {
-                    @Override
-                    public void onMapReady(GoogleMap gMap) {
-                        googleMap = gMap;
-                        LatLng sydney = new LatLng(-33.868820, 151.209290);
-                        googleMap.addMarker(new MarkerOptions().position(sydney).title("Marker Title").snippet("Marker Description"));
 
-                        // For zooming automatically to the location of the marker
-                        CameraPosition cameraPosition = new CameraPosition.Builder().target(sydney).zoom(12).build();
-                        googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-                        googleMap.addPolyline(polylineOptions);
+                if(c.moveToFirst()){
+                    coordList.add(new LatLng(c.getDouble(0), c.getDouble(1)));
+                    while (c.moveToNext()) {
+                        coordList.add(new LatLng(c.getDouble(0), c.getDouble(1)));
                     }
-                });
+                }
+                if(coordList.size() > 0){
+                    polylineOptions.addAll(coordList);
+                    polylineOptions.color(Color.RED);
+                    polylineOptions.width(5);
+
+                    mMapView.getMapAsync(new OnMapReadyCallback() {
+                        @Override
+                        public void onMapReady(GoogleMap gMap) {
+                            googleMap = gMap;
+                            LatLng startLoc = coordList.get(0);
+                            LatLng endLoc = coordList.get(coordList.size() - 1);
+                            googleMap.addMarker(new MarkerOptions().position(startLoc).title("Your route starts here"));
+                            googleMap.addMarker(new MarkerOptions().position(endLoc).title("Your route ends here"));
+                            // For zooming automatically to the location of the marker
+                            CameraPosition cameraPosition = new CameraPosition.Builder().target(startLoc).zoom(15).build();
+                            googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                            googleMap.addPolyline(polylineOptions);
+                        }
+                    });
+                }else {
+                    Toast.makeText(getContext(), "List emty", Toast.LENGTH_SHORT).show();
+                }
                 c.close();
             }catch (SQLException e){
                 Toast.makeText(getContext(), "Database Unavailable", Toast.LENGTH_SHORT).show();
@@ -213,6 +223,7 @@ public class RouteDetailFragment extends Fragment {
     public void onResume() {
         super.onResume();
         mMapView.onResume();
+
     }
 
     @Override

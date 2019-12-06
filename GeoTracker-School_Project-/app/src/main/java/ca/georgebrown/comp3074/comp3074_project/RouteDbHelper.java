@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class RouteDbHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "routes";
-    private static final int DB_VERSION = 3;
+    private static final int DB_VERSION = 4;
     public RouteDbHelper(Context context){
         super(context, DB_NAME, null, DB_VERSION);
     }
@@ -43,12 +43,12 @@ public class RouteDbHelper extends SQLiteOpenHelper {
                 + "LATITUDE REAL, "
                 + "LONGITUDE REAL, "
                 + "TIME INTEGER);");
-        //Route_id = _id in route table + 1
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS ROUTE");
+        db.execSQL("DROP TABLE IF EXISTS PATH");
         onCreate(db);
     }
     private static void insertRoute(

@@ -13,7 +13,9 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -32,6 +34,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -55,12 +58,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private SQLiteDatabase db;
     private Cursor cursor;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-
         if (savedInstanceState != null) {
             trackingLocation = savedInstanceState.getBoolean(TRACKING_LOCATION_KEY);
         }
@@ -78,6 +81,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             }
         });
+
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
@@ -107,10 +111,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         // Add a marker in Sydney and move the camera
-        float zoom = 15;
-        LatLng gbc = new LatLng(43.676209, -79.410703);
-        mMap.addMarker(new MarkerOptions().position(gbc).title("Marker in GBC"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(gbc, zoom));
+        //float zoom = 15;
+        //LatLng gbc = new LatLng(43.676209, -79.410703);
+        //mMap.addMarker(new MarkerOptions().position(gbc).title("Marker in GBC"));
+        //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(gbc, zoom));
     }
     private void startTrackingLocation(){
         if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -140,13 +144,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             newDate = String.valueOf(android.text.format.DateFormat.format("dd-MM-yyyy", new java.util.Date()));
             newDifficulty = "Test Difficulty";
             showDialog(newDeparture, newDestination, newDistance, newDuration);
-            tempAddress.clear();
-            tempLatLog.clear();
+
         }
     }
     private LocationRequest getLocationRequest() {
         LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(30000);
+        locationRequest.setInterval(10000);
         locationRequest.setFastestInterval(5000);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         return locationRequest;
@@ -190,17 +193,30 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 newDeparture = txtDeparture.getText().toString();
                 newDestination = txtDestination.getText().toString();
                 insertRoute(db, newDeparture, newDestination, newVia, newDate, newDuration, newDistance, newDifficulty);
+                cursor = getListId(db);
+                int lastRouteId = -1;
+                if(cursor.moveToLast()){
+                    lastRouteId = cursor.getInt(0);
+                }
+                Toast.makeText(MapsActivity.this, tempLatLog.size() + " " + lastRouteId , Toast.LENGTH_SHORT).show();
+                cursor.close();
+                for (int n = 0; n < tempLatLog.size(); n++) {
+                    insertPath(db, lastRouteId, (float) tempLatLog.get(n)[0], (float) tempLatLog.get(n)[1]);
+                }
                 Toast.makeText(getApplicationContext(), "Saved", Toast.LENGTH_SHORT).show();
+                tempAddress.clear();
+                tempLatLog.clear();
                 dialog.cancel();
             }
         });
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                tempAddress.clear();
+                tempLatLog.clear();
                 dialog.cancel();
             }
         });
-
         dialog.show();
     }
 
@@ -225,13 +241,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         return db.query("ROUTE",
                 new String[] {"_id"},
                 null, null,
-                null, null, "_id");
+                null, null, "_id ");
     }
-    private void insertPath(SQLiteDatabase db, int routeIdPlusOne, float lat, float lng){
+    private void insertPath(SQLiteDatabase db, int routeId, float lat, float lng){
         RouteDbHelper routeDbHelper = new RouteDbHelper(this.getApplication());
         db = routeDbHelper.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
-        contentValues.put("ROUTE_ID", routeIdPlusOne);
+        contentValues.put("ROUTE_ID", routeId);
         contentValues.put("LATITUDE", lat);
         contentValues.put("LONGITUDE", lng);
         db.insert("PATH", null, contentValues);
@@ -274,26 +290,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onTaskCompleted(String result) {
-        Toast.makeText(this, result, Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, result, Toast.LENGTH_SHORT).show();
         tempAddress.add(result);
-        final Location[] currentLocation = new Location[1];
+        //final Location[] currentLocation = new Location[1];
         fusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
             @Override
             public void onSuccess(Location location) {
                 if(location != null){
-                    currentLocation[0] = location;
-                    Toast.makeText(MapsActivity.this, currentLocation[0].getLatitude()+" "+
+                    //currentLocation[0] = location;
+                    /*Toast.makeText(MapsActivity.this, currentLocation[0].getLatitude()+" "+
                             currentLocation[0].getLongitude(), Toast.LENGTH_SHORT).show();
-                    tempLatLog.add(new double[] {currentLocation[0].getLatitude(), currentLocation[0].getLongitude()});
-                    cursor = getListId(db);
-                    int lastRouteId = 0;
-                    if(cursor.moveToLast()){
-                        lastRouteId = cursor.getInt(0) + 1;
-                    }
-                    cursor.close();
-                    for (int n = 0; n < tempLatLog.size(); n++) {
-                        insertPath(db, lastRouteId,(float) tempLatLog.get(n)[0],(float) tempLatLog.get(n)[1]);
-                    }
+                    tempLatLog.add(new double[] {currentLocation[0].getLatitude(), currentLocation[0].getLongitude()});*/
+                    Toast.makeText(getApplicationContext(), location.getLatitude() +" "+ location.getLongitude(),
+                            Toast.LENGTH_SHORT).show();
+                    tempLatLog.add(new double[] {location.getLatitude(), location.getLongitude()});
+                    Toast.makeText(MapsActivity.this, tempLatLog.size()+"", Toast.LENGTH_SHORT).show();
                 }
                 else{
                     Toast.makeText(getApplicationContext(), "Hello", Toast.LENGTH_SHORT).show();

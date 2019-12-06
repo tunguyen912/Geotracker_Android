@@ -59,7 +59,7 @@ class FetchAddressTask extends AsyncTask<Location, Void, String> {
             }
         }catch (IOException ioException) {
             // Catch network or other I/O problems
-            resultMessage = "Service not available";
+            resultMessage = "";
             Log.e(TAG, resultMessage, ioException);
         }catch (IllegalArgumentException illegalArgumentException) {
             // Catch invalid latitude or longitude values
