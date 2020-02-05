@@ -24,13 +24,6 @@
         android:layout_marginTop="3dp"
         android:textSize="20sp" />
     <TextView
-        android:id="@+id/textVia"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="3dp"
-        android:layout_marginTop="3dp"
-        android:textSize="20sp"/>
-    <TextView
         android:id="@+id/textDestination"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -38,7 +31,7 @@
         android:layout_marginTop="3dp"
         android:textSize="20sp"/>
     <TextView
-        android:id="@+id/textDifficulty"
+        android:id="@+id/textNote"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="3dp"

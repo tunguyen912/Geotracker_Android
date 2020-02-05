@@ -87,26 +87,22 @@ public class RouteDetailFragment extends Fragment {
                 RouteDbHelper routeDbHelper = new RouteDbHelper(getContext());
                 db = routeDbHelper.getReadableDatabase();
                 cursor = db.query("ROUTE",
-                        new String[] {"DEPARTURE", "DESTINATION", "VIA", "DATE", "DIFFICULTY", "DURATION", "DISTANCE", "RATE"},
+                        new String[] {"DEPARTURE", "DESTINATION", "DATE", "NOTE", "DURATION", "RATE"},
                         "_id = ?", new String[] {Long.toString(routeId)},
                         null, null, null);
                 if(cursor.moveToFirst()){
                     TextView departure = view.findViewById(R.id.textDeparture);
                     departure.setText(getString(R.string.departure , cursor.getString(0)));
-                    TextView via = view.findViewById(R.id.textVia);
-                    via.setText(getString(R.string.via , cursor.getString(2)));
                     TextView destination = view.findViewById(R.id.textDestination);
                     destination.setText(getString(R.string.destination , cursor.getString(1)));
-                    TextView distance = view.findViewById(R.id.textDistance);
-                    distance.setText(getString(R.string.distance , cursor.getString(6)));
                     TextView duration = view.findViewById(R.id.textDuration);
-                    duration.setText(getString(R.string.duration , cursor.getString(5)));
-                    TextView difficulty = view.findViewById(R.id.textDifficulty);
-                    difficulty.setText(getString(R.string.difficulty , cursor.getString(4)));
+                    duration.setText(getString(R.string.duration , cursor.getString(4)));
+                    TextView note = view.findViewById(R.id.textNote);
+                    note.setText(getString(R.string.note , cursor.getString(3)));
                     TextView date = view.findViewById(R.id.textDate);
-                    date.setText(getString(R.string.date, cursor.getString(3)));
+                    date.setText(getString(R.string.date, cursor.getString(2)));
                     ratingBar = view.findViewById(R.id.ratingBar);
-                    ratingBar.setRating(cursor.getFloat(7));
+                    ratingBar.setRating(cursor.getFloat(5));
                     ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
                         @Override
                         public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
@@ -165,6 +161,7 @@ public class RouteDetailFragment extends Fragment {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             deleteRoute(routeId);
+                            deletePath(routeId);
                             Toast.makeText(getContext(), "Successfully Deleted !!!", Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(getActivity(),RouteListActivity.class);
                             startActivity(intent);
@@ -204,6 +201,12 @@ public class RouteDetailFragment extends Fragment {
         RouteDbHelper routeDbHelper = new RouteDbHelper(this.getContext());
         db = routeDbHelper.getWritableDatabase();
         db.delete("ROUTE", "_id = ?", new String[] {Long.toString(routeDeleteId)});
+        db.close();
+    }
+    private void deletePath(long pathRouteId){
+        RouteDbHelper routeDbHelper = new RouteDbHelper(this.getContext());
+        db = routeDbHelper.getWritableDatabase();
+        db.delete("PATH", "_id = ?", new String[] {Long.toString(pathRouteId)});
         db.close();
     }
     @Override

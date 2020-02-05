@@ -49,11 +49,11 @@ public class RouteListFragment extends ListFragment {
         RouteDbHelper routeDbHelper = new RouteDbHelper(getContext());
         db = routeDbHelper.getReadableDatabase();
         cursor = db.query("ROUTE",
-                new String[] {"_id", "DEPARTURE", "DESTINATION", "DURATION", "DISTANCE", "DATE"},
+                new String[] {"_id", "DEPARTURE", "DESTINATION", "DURATION","NOTE", "DATE"},
                 null, null ,null, null, null);
         CursorAdapter adapter = new SimpleCursorAdapter(inflater.getContext(), R.layout.route_list_layout,
-                cursor, new String[] {"DEPARTURE", "DESTINATION", "DURATION", "DISTANCE", "DATE"},
-                new int[] {R.id.departure, R.id.destination, R.id.distance, R.id.duration, R.id.date}, 0);
+                cursor, new String[] {"DEPARTURE", "DESTINATION", "DURATION","NOTE", "DATE"},
+                new int[] {R.id.departure, R.id.destination, R.id.textNote, R.id.duration, R.id.date}, 0);
         setListAdapter(adapter);
         }catch (SQLException e){
             Toast.makeText(getContext(), "Database Unavailable", Toast.LENGTH_SHORT).show();
@@ -109,8 +109,8 @@ public class RouteListFragment extends ListFragment {
             RouteDbHelper routeDbHelper = new RouteDbHelper(getContext());
             db = routeDbHelper.getReadableDatabase();
             cursor = db.query("ROUTE",
-                    new String[] {"_id", "DEPARTURE", "DESTINATION", "DURATION", "DISTANCE", "DATE"},
-                    "DEPARTURE LIKE ? OR DESTINATION LIKE ?",
+                    new String[] {"_id", "DEPARTURE", "DESTINATION","NOTE", "DURATION", "DATE"},
+                    "DEPARTURE LIKE ? OR DESTINATION LIKE ? OR NOTE LIKE ?",
                     new String[] {"%" + searchInput + "%", "%" + searchInput + "%" },
                     null, null, null);
 
@@ -119,8 +119,8 @@ public class RouteListFragment extends ListFragment {
             }
 
             CursorAdapter adapter = new SimpleCursorAdapter(inflater.getContext(), R.layout.route_list_layout,
-                    cursor, new String[] {"DEPARTURE", "DESTINATION", "DURATION", "DISTANCE", "DATE"},
-                    new int[] {R.id.departure, R.id.destination, R.id.distance, R.id.duration, R.id.date}, 0);
+                    cursor, new String[] {"DEPARTURE", "DESTINATION", "NOTE", "DURATION", "DATE"},
+                    new int[] {R.id.departure, R.id.destination, R.id.textNote, R.id.duration, R.id.date}, 0);
             setListAdapter(adapter);
         }catch (SQLException e){
             Toast.makeText(getContext(), "Database Unavailable", Toast.LENGTH_SHORT).show();

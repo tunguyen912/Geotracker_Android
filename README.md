@@ -1,2 +1,4 @@
 # GeoTracker-School_Project-
-A school project I did with my friend for Android Development course about creating an app that can track your route then which can be utilize to display, share them.
+
+An android application to locate your current location, and save the path you have passed so that you can reuse that for any purpose
+TO use that you have to create your all google API and fill it in google_maps_api.xml folder

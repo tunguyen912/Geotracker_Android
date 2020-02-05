@@ -5,7 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
-import android.Manifest;
+    import android.Manifest;
 import android.app.Dialog;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -22,6 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -37,27 +38,37 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, FetchAddressTask.OnTaskCompleted {
 
     private GoogleMap mMap;
+    private static final String TAG = MapsActivity.class.getSimpleName();
     private static final int REQUEST_LOCATION_PERMISSION = 1;
     private static final String TRACKING_LOCATION_KEY = "tracking_key";
     private FusedLocationProviderClient fusedLocationClient;
+    private Location mLastKnownLocation;
     private LocationCallback locationCallback;
+    private final LatLng mDefaultLocation = new LatLng(43.676209, -79.410703);
+    private static final int DEFAULT_ZOOM = 15;
     private List<String> tempAddress = new ArrayList<String>();
     private List<double[]> tempLatLog = new ArrayList<double[]>();
 
     private boolean trackingLocation;
     private ImageView startTrack;
-    private String newDeparture, newDestination, newDistance, newDuration, newVia, newDate, newDifficulty;
+    private String newDeparture, newDestination, newDuration, newDate, newNote;
     private SQLiteDatabase db;
     private Cursor cursor;
-
+    private boolean mLocationPermissionGranted;
+    private LocalDateTime startTime, endTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +105,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
+        // Construct a FusedLocationProviderClient.
         mapFragment.getMapAsync(this);
     }
 
@@ -110,40 +122,62 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        updateLocationUI();
+        getDeviceLocation();
         // Add a marker in Sydney and move the camera
         //float zoom = 15;
         //LatLng gbc = new LatLng(43.676209, -79.410703);
         //mMap.addMarker(new MarkerOptions().position(gbc).title("Marker in GBC"));
         //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(gbc, zoom));
+
     }
     private void startTrackingLocation(){
+//        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+//                != PackageManager.PERMISSION_GRANTED){
+//            ActivityCompat.requestPermissions(this,
+//                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
+//                    REQUEST_LOCATION_PERMISSION);
+//        }else {
+//            fusedLocationClient.requestLocationUpdates(getLocationRequest(), locationCallback, null );
+//        }
+        getLocationPermission();
+        trackingLocation = true;
+        startTime = LocalDateTime.now();
+        Toast.makeText(getApplicationContext(),"Start Tracking" , Toast.LENGTH_SHORT).show();
+        startTrack.setImageResource(R.drawable.stop);
+    }
+    private void getLocationPermission(){
         if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED){
             ActivityCompat.requestPermissions(this,
                     new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
                     REQUEST_LOCATION_PERMISSION);
+            mLocationPermissionGranted = true;
         }else {
             fusedLocationClient.requestLocationUpdates(getLocationRequest(), locationCallback, null );
         }
-        trackingLocation = true;
-        Toast.makeText(getApplicationContext(),"Start Tracking" , Toast.LENGTH_SHORT).show();
-        startTrack.setImageResource(R.drawable.stop);
     }
     private void stopTrackingLocation(){
         if(trackingLocation){
             trackingLocation = false;
+            endTime = LocalDateTime.now();
             Toast.makeText(getApplicationContext(),"Stop Tracking" , Toast.LENGTH_SHORT).show();
             startTrack.setImageResource(R.drawable.start);
             fusedLocationClient.removeLocationUpdates(locationCallback);
 
             newDeparture = tempAddress.get(0);
             newDestination = tempAddress.get(tempAddress.size() - 1);
-            newDistance = "Test Distance";
-            newDuration = "Test Duration";
-            newVia = "Test Via";
+            Duration duration = Duration.between(startTime, endTime);
+            long seconds = duration.getSeconds();
+            long hours = seconds/3600;
+            long mins = (seconds%3600)/60;
+            long secs = seconds%60;
+
+
+            newDuration = hours + " hours " +mins + " minutes " +secs + " seconds.";
             newDate = String.valueOf(android.text.format.DateFormat.format("dd-MM-yyyy", new java.util.Date()));
-            newDifficulty = "Test Difficulty";
-            showDialog(newDeparture, newDestination, newDistance, newDuration);
+            newNote = "Any Note";
+            showDialog(newDeparture, newDestination, newNote, newDuration);
 
         }
     }
@@ -157,34 +191,37 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if(requestCode == REQUEST_LOCATION_PERMISSION){
+            mLocationPermissionGranted = false;
             if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                mLocationPermissionGranted = true;
                 startTrackingLocation();
             }else {
                 Toast.makeText(this, "Permission is not granted", Toast.LENGTH_SHORT).show();
             }
         }
+        updateLocationUI();
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
-    private void showDialog(String departure, String destination, String distance, String duration){
+    private void showDialog(String departure, String destination, String note, String duration){
         final Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_layout);
         dialog.setCanceledOnTouchOutside(false);
 
         Button btnSave, btnCancel;
-        final EditText txtDeparture, txtDestination;
-        EditText txtDuration, txtDistance;
+        final EditText txtDeparture, txtDestination, txtNote;
+        EditText txtDuration;
 
         btnSave = dialog.findViewById(R.id.btnSaveDialog);
         btnCancel = dialog.findViewById(R.id.btnCancelDialog);
         txtDeparture = dialog.findViewById(R.id.txtDepartureDialog);
         txtDestination = dialog.findViewById(R.id.txtDestinationDialog);
         txtDuration = dialog.findViewById(R.id.txtDurationDialog);
-        txtDistance = dialog.findViewById(R.id.txtDistanceDialog);
+        txtNote = dialog.findViewById(R.id.txtNoteDialog);
 
         txtDeparture.setText(departure);
         txtDestination.setText(destination);
-        txtDistance.setText(distance);
+        txtNote.setText(note);
         txtDuration.setText(duration);
 
         btnSave.setOnClickListener(new View.OnClickListener() {
@@ -192,7 +229,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onClick(View v) {
                 newDeparture = txtDeparture.getText().toString();
                 newDestination = txtDestination.getText().toString();
-                insertRoute(db, newDeparture, newDestination, newVia, newDate, newDuration, newDistance, newDifficulty);
+                insertRoute(db, newDeparture, newDestination, newDate, newDuration, newNote);
                 cursor = getListId(db);
                 int lastRouteId = -1;
                 if(cursor.moveToLast()){
@@ -220,18 +257,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         dialog.show();
     }
 
-    private void insertRoute(SQLiteDatabase db, String newDeparture, String newDestination, String newVia,
-                             String newDate, String newDuration, String newDistance, String newDifficulty){
+    private void insertRoute(SQLiteDatabase db, String newDeparture, String newDestination,
+                             String newDate, String newDuration, String newNote){
         RouteDbHelper routeDbHelper = new RouteDbHelper(this.getApplication());
         db = routeDbHelper.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put("DEPARTURE", newDeparture);
         contentValues.put("DESTINATION", newDestination);
-        contentValues.put("VIA", newVia);
         contentValues.put("DATE", newDate);
-        contentValues.put("DIFFICULTY", newDifficulty);
+        contentValues.put("NOTE", newNote);
         contentValues.put("DURATION", newDuration);
-        contentValues.put("DISTANCE", newDistance);
         db.insert("ROUTE", null, contentValues);
         db.close();
     }
@@ -311,6 +346,55 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             }
         });
+    }
+
+    private void getDeviceLocation() {
+        /*
+         * Get the best and most recent location of the device, which may be null in rare
+         * cases when a location is not available.
+         */
+        try {
+            if (mLocationPermissionGranted) {
+                Task locationResult = fusedLocationClient.getLastLocation();
+                locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Location> task) {
+                        if (task.isSuccessful() && task.getResult() != null) {
+                            // Set the map's camera position to the current location of the device.
+                            mLastKnownLocation = task.getResult();
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                                    new LatLng(mLastKnownLocation.getLatitude(),
+                                            mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
+                        } else {
+                            Log.d(TAG,"Current location is null. Using defaults.");
+                            Log.e(TAG, task.getException().toString());
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
+                            mMap.getUiSettings().setMyLocationButtonEnabled(false);
+                        }
+                    }
+                });
+            }
+        } catch(SecurityException e)  {
+            Log.e("Exception: %s", e.getMessage());
+        }
+    }
+    private void updateLocationUI() {
+        if (mMap == null) {
+            return;
+        }
+        try {
+            if (mLocationPermissionGranted) {
+                mMap.setMyLocationEnabled(true);
+                mMap.getUiSettings().setMyLocationButtonEnabled(true);
+            } else {
+                mMap.setMyLocationEnabled(false);
+                mMap.getUiSettings().setMyLocationButtonEnabled(false);
+                mLastKnownLocation = null;
+                getLocationPermission();
+            }
+        } catch (SecurityException e)  {
+            Log.e("Exception: %s", e.getMessage());
+        }
     }
 
     @Override
